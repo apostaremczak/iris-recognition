@@ -18,14 +18,6 @@ def extract_user_ids(input_dir: str) -> Set[int]:
     return set(int(user_path.split("/")[-2]) for user_path in glob(input_dir))
 
 
-def _safely_create_dir(dir_path: str):
-    """
-    Create a directory if it doesn't exist.
-    """
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-
-
 def organize_files(input_dir: str = INPUT_DIR,
                    target_dir: str = TARGET_DIR,
                    user_ids: List[int] = None) -> None:
@@ -36,15 +28,23 @@ def organize_files(input_dir: str = INPUT_DIR,
                        of all users present at both sessions will be used.
 
     :return:           Nothing. Files in the target directory will have names
-                       in the format "<user-id>_<user-sample-number>.jpg"
+                       in the format "<user-id>_<user-sample-number>.jpg".
+
+    Note: If the target directory already exists and has some data in it,
+    the data will be deleted before copying the new dataset.
     """
     if user_ids is None:
         first_session_ids = extract_user_ids(f"{input_dir}/Sessao_1/*/")
         second_session_ids = extract_user_ids(f"{input_dir}/Sessao_2/*/")
         user_ids = list(first_session_ids.intersection(second_session_ids))
 
-    # Create the target directory
-    _safely_create_dir(target_dir)
+    # Create an empty target directory or remove data already present
+    if os.path.exists(target_dir):
+        files = glob(target_dir)
+        for file in files:
+            os.remove(file)
+    else:
+        os.makedirs(target_dir)
 
     for user_id in user_ids:
         pic_count = 0
