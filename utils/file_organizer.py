@@ -40,7 +40,7 @@ def organize_files(input_dir: str = INPUT_DIR,
 
     # Create an empty target directory or remove data already present
     if os.path.exists(target_dir):
-        files = glob(target_dir)
+        files = glob(target_dir + "/*")
         for file in files:
             os.remove(file)
     else:
