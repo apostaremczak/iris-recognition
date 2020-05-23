@@ -2,9 +2,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-PUPIL_THRESH_FACTOR = 4.5
-IRIS_THRESH_FACTOR = 1.5
-
 
 class Image:
     def __init__(self, img: np.ndarray = None, image_path: str = None):
@@ -32,11 +29,13 @@ class Image:
         self._update_shape()
 
     def save(self, output_image_path: str):
-        assert self.img is not None, "Trying to write an empty image"
+        assert self.img is not None, "Trying to write an empty binarized_image"
         cv2.imwrite(filename=output_image_path, img=self.img)
 
-    def show(self):
-        plt.imshow(self.img)
+    def show(self, title=None, fontsize=15, cmap="gray"):
+        plt.imshow(self.img, cmap=cmap)
+        if title is not None:
+            plt.title(title, fontsize=fontsize)
         plt.show()
 
     def binarize(self, threshold_factor: float):
@@ -60,3 +59,16 @@ class Image:
 
     def to_bw(self):
         return Image(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY))
+
+    def draw_circle(self, x_coord, y_coord, radius, color=(0, 0, 0),
+                    thickness=5):
+        return Image(cv2.circle(self.img, (x_coord, y_coord), radius, color,
+                                thickness=thickness))
+
+    def enhance_contrast(self):
+        assert self.num_channels == 1, \
+            "Contrast enhancement only supported for BW images"
+        return Image(cv2.equalizeHist(self.img))
+
+    def apply_clahe(self, **kwargs):
+        return Image(cv2.createCLAHE(**kwargs).apply(self.img))
