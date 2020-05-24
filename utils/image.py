@@ -37,8 +37,9 @@ class Image:
                 self.height = None
                 self.width = None
                 self.num_channels = None
-        self.pupil = None
-        self.iris = None
+
+        self.pupil: Circle = None
+        self.iris: Circle = None
 
     def _update_shape(self):
         self.height = self.img.shape[0]
@@ -95,6 +96,10 @@ class Image:
         return Image(cv2.createCLAHE(**kwargs).apply(self.img))
 
     def find_iris_and_pupil(self):
+        """
+        Localize iris and pupil on the image. Updates self.iris and self.pupil
+        parameters.
+        """
         eye_bw = self.to_bw()
         # Increase contrast for easier eye_image detection
         iris_img = eye_bw.enhance_contrast() \
@@ -130,6 +135,9 @@ class Image:
         self.pupil = pupil
 
     def circle_iris_and_pupil(self):
+        """
+        Draw circles around localized iris and pupil
+        """
         if self.pupil is None or self.iris is None:
             self.find_iris_and_pupil()
 
