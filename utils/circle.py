@@ -8,12 +8,14 @@ class Circle:
     center_y: int
     radius: int
 
+    def to_numpy(self) -> np.ndarray:
+        return np.array([self.center_x, self.center_y, self.radius])
+
     def is_within(self, other) -> bool:
         """
         :param other: Another Circle instance
         :return: True is this circle is contained in another circle
         """
-        this_center = np.array([self.center_x, self.center_y])
-        other_center = np.array([other.center_x, other.center_y])
-        center_dist = np.linalg.norm(this_center - other_center)
+        center_dist = np.linalg.norm(
+            self.to_numpy()[:-1] - other.to_numpy()[:-1])
         return other.radius > (center_dist + self.radius)
