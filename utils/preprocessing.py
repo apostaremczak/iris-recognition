@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
-import os
 import re
 from glob import glob
-from preprocessing_exceptions import *
+from typing import List, Tuple
 
 from circle import Circle
+from file_organizer import create_empty_dir
 from image import Image
+from preprocessing_exceptions import *
 
 DATA_DIR = "../data/"
 FILENAME_REGEX = r"(\d+)_(\d+)\.jpg"
@@ -37,25 +38,22 @@ def find_circle_nearest_point(binarized_image: Image, point: np.ndarray,
     return Circle(*circle_params)
 
 
-if __name__ == '__main__':
-    image_paths = sorted(glob(DATA_DIR + "*"))
-    target_dir = "../circled_images"
+def extract_user_sample_ids(image_path: str) -> Tuple[str, str]:
+    """
+    Extract user ID and sample number from filename
+    """
+    image_filename = image_path.split("/")[-1]
+    user_id, sample_id = re.match(FILENAME_REGEX, image_filename).groups()
+    return user_id, sample_id
 
-    if os.path.exists(target_dir):
-        files = glob(target_dir + "/*")
-        for file in files:
-            os.remove(file)
-    else:
-        os.makedirs(target_dir)
 
+def circle_available_images(image_paths: List[str], target_dir: str):
+    create_empty_dir(target_dir)
     failed_count = 0
 
     for image_path in image_paths:
-        # Extract user ID and the sample number from the filename
-        image_filename = image_path.split("/")[-1]
-        user_id, sample_id = re.match(FILENAME_REGEX, image_filename).groups()
         eye_image = Image(image_path=image_path)
-
+        user_id, sample_id = extract_user_sample_ids(image_path)
         try:
             eye_image.circle_iris_and_pupil().save(
                 f"{target_dir}/{user_id}_{sample_id}.jpg"
@@ -64,3 +62,7 @@ if __name__ == '__main__':
             failed_count += 1
 
     print(f"{failed_count} failed preprocessings")
+
+
+if __name__ == '__main__':
+    circle_available_images(sorted(glob(DATA_DIR + "*")), "../circled_images")

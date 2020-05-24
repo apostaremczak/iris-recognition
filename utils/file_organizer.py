@@ -18,6 +18,15 @@ def extract_user_ids(input_dir: str) -> Set[int]:
     return set(int(user_path.split("/")[-2]) for user_path in glob(input_dir))
 
 
+def create_empty_dir(target_dir: str):
+    if os.path.exists(target_dir):
+        files = glob(target_dir + "/*")
+        for file in files:
+            os.remove(file)
+    else:
+        os.makedirs(target_dir)
+
+
 def organize_files(input_dir: str = INPUT_DIR,
                    target_dir: str = TARGET_DIR,
                    user_ids: List[int] = None) -> None:
@@ -39,12 +48,7 @@ def organize_files(input_dir: str = INPUT_DIR,
         user_ids = list(first_session_ids.intersection(second_session_ids))
 
     # Create an empty target directory or remove data already present
-    if os.path.exists(target_dir):
-        files = glob(target_dir + "/*")
-        for file in files:
-            os.remove(file)
-    else:
-        os.makedirs(target_dir)
+    create_empty_dir(target_dir)
 
     for user_id in user_ids:
         pic_count = 0
