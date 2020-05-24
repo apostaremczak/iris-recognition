@@ -1,58 +1,66 @@
 import cv2
 import numpy as np
+import os
+import re
+from glob import glob
+from preprocessing_exceptions import *
+
+from circle import Circle
 from image import Image
 
+DATA_DIR = "../data/"
+FILENAME_REGEX = r"(\d+)_(\d+)\.jpg"
 
-def preprocess_iris_image(image_path: str) -> np.ndarray:
-    pass
 
+def find_circle_nearest_point(binarized_image: Image, point: np.ndarray,
+                              **kwargs) -> Circle:
+    """
+    Use Hough Transform to find circles in the image and return the one
+    closest to the image center.
 
-def find_circles(simg, **kwargs):
-    circle_img = simg
-    circles = cv2.HoughCircles(circle_img.img,
+    :param binarized_image: Binary BW image
+    :param point:
+    :param kwargs:          Arguments to be passed to cv2.HoughCircles
+
+    :return: Coordinates and radius of the circle found with the smallest
+             Euclidean distance to the image's center
+    """
+    circles = cv2.HoughCircles(binarized_image.img,
                                method=cv2.HOUGH_GRADIENT, **kwargs)
 
-    assert circles is not None, "No circles found"
+    if circles is None:
+        raise CirclesNotFoundException("No circles found")
 
-    circles = np.uint8(np.around(circles))
-    circle_img = Image(cv2.cvtColor(circle_img.img, cv2.COLOR_GRAY2RGB))
+    dist_from_centre = np.linalg.norm(circles[0, :, :2] - point, axis=1)
+    circle_params = circles[0, np.argmin(dist_from_centre)]
 
-    # Draw the circles found
-    for i in circles[0, :]:
-        cv2.circle(circle_img.img, (i[0], i[1]), i[2], (255, 30, 0), 2)
-
-    return circles
+    return Circle(*circle_params)
 
 
-def circle_iris_and_pupil(eye: Image) -> Image:
-    pupil = eye.binarize(4.5)
-    pupil_only = pupil.close(np.ones((4, 4), np.uint8))
+if __name__ == '__main__':
+    image_paths = sorted(glob(DATA_DIR + "*"))
+    target_dir = "../circled_images"
 
-    pupil_center = find_circles(pupil_only, dp=1.0, minDist=10, param1=1,
-                                param2=15, minRadius=1, maxRadius=500)
-    pupil_center = pupil_center[0, 0]
-    print(f"Pupil center found at ({pupil_center[0]}, {pupil_center[1]}); "
-          f"Pupil radius: {pupil_center[2]}px")
+    if os.path.exists(target_dir):
+        files = glob(target_dir + "/*")
+        for file in files:
+            os.remove(file)
+    else:
+        os.makedirs(target_dir)
 
-    iris = eye.binarize(1.5)
-    iris_only = iris.close(np.ones((18, 18), np.uint8)).erode(
-        np.ones((4, 4), np.uint8)).open(np.ones((5, 5), np.uint8))
-    iris_center = find_circles(iris_only, dp=1.1, minDist=5, param1=10,
-                               param2=20, minRadius=1, maxRadius=500)
-    iris_center = iris_center[0, 0]
+    failed_count = 0
 
-    print(f"Iris center found at ({iris_center[0]}, {iris_center[1]}); "
-          f"Iris radius: {iris_center[2]}px")
+    for image_path in image_paths:
+        # Extract user ID and the sample number from the filename
+        image_filename = image_path.split("/")[-1]
+        user_id, sample_id = re.match(FILENAME_REGEX, image_filename).groups()
+        eye_image = Image(image_path=image_path)
 
-    # Draw the pupil and the iris
+        try:
+            eye_image.circle_iris_and_pupil().save(
+                f"{target_dir}/{user_id}_{sample_id}.jpg"
+            )
+        except ImageProcessingException:
+            failed_count += 1
 
-    eye_rgb = eye.to_rgb()
-
-    # Pupil
-    cv2.circle(eye_rgb.img, (pupil_center[0], pupil_center[1]),
-               pupil_center[2], (255, 30, 0), 2)
-    # Iris
-    cv2.circle(eye_rgb.img, (iris_center[0], iris_center[1]), iris_center[2],
-               (0, 255, 0), 2)
-
-    return eye_rgb
+    print(f"{failed_count} failed preprocessings")

@@ -1,10 +1,31 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+
 from circle import Circle
+from preprocessing import find_circle_nearest_point
+from preprocessing_exceptions import *
 
 
 class Image:
+    PUPIL_HOUGH_PARAMS = {
+        "dp": 1.0,
+        "minDist": 200,
+        "param1": 10,
+        "param2": 15,
+        "minRadius": 20,
+        "maxRadius": 150
+    }
+
+    IRIS_HOUGH_PARAMS = {
+        "dp": 1.5,
+        "minDist": 200,
+        "param1": 10,
+        "param2": 30,
+        "minRadius": 100,
+        "maxRadius": 300
+    }
+
     def __init__(self, img: np.ndarray = None, image_path: str = None):
         self.img = img
         if image_path is not None:
@@ -16,6 +37,8 @@ class Image:
                 self.height = None
                 self.width = None
                 self.num_channels = None
+        self.pupil = None
+        self.iris = None
 
     def _update_shape(self):
         self.height = self.img.shape[0]
@@ -70,3 +93,44 @@ class Image:
 
     def apply_clahe(self, **kwargs):
         return Image(cv2.createCLAHE(**kwargs).apply(self.img))
+
+    def find_iris_and_pupil(self):
+        eye_bw = self.to_bw()
+        # Increase contrast for easier eye_image detection
+        iris_img = eye_bw.enhance_contrast() \
+            .apply_clahe(clipLimit=2.0, tileGridSize=(10, 10)) \
+            .binarize(1.5)
+
+        iris_only = iris_img.close(np.ones((5, 5), np.uint8)) \
+            .erode(np.ones((5, 5), np.uint8)) \
+            .open(np.ones((5, 5), np.uint8))
+
+        # Find eye_image - its center should be close to the center
+        # of the image
+        image_center = np.array([eye_bw.width // 2, eye_bw.height // 2])
+        iris = find_circle_nearest_point(iris_only, image_center,
+                                         **Image.IRIS_HOUGH_PARAMS)
+
+        # Use CLAHE to enhance pupil visibility in dark eyes/photos
+        pupil_img = eye_bw \
+            .apply_clahe(clipLimit=3.0, tileGridSize=(20, 20)) \
+            .binarize(2.0)
+        pupil_only = pupil_img.close(np.ones((6, 6), np.uint8))
+
+        # Find pupil - its center should be close to eye_image' center
+        pupil = find_circle_nearest_point(pupil_only, iris.to_numpy()[:-1],
+                                          **Image.PUPIL_HOUGH_PARAMS)
+
+        # Ensure that the pupil found is within the eye_image
+        if not pupil.is_within(iris):
+            raise PupilOutsideIrisException(
+                "Pupil found outside of the eye_image")
+
+        self.iris = iris
+        self.pupil = pupil
+
+    def circle_iris_and_pupil(self):
+        if self.pupil is None or self.iris is None:
+            self.find_iris_and_pupil()
+
+        return self.draw_circle(self.pupil).draw_circle(self.iris)
