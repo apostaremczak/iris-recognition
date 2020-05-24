@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from circle import Circle
 
 
 class Image:
@@ -60,14 +61,11 @@ class Image:
     def to_bw(self):
         return Image(cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY))
 
-    def draw_circle(self, x_coord, y_coord, radius, color=(0, 0, 0),
-                    thickness=5):
-        return Image(cv2.circle(self.img, (x_coord, y_coord), radius, color,
-                                thickness=thickness))
+    def draw_circle(self, circle: Circle, color=(0, 0, 0), thickness=5):
+        return Image(cv2.circle(self.img, (circle.center_x, circle.center_y),
+                                circle.radius, color, thickness=thickness))
 
     def enhance_contrast(self):
-        assert self.num_channels == 1, \
-            "Contrast enhancement only supported for BW images"
         return Image(cv2.equalizeHist(self.img))
 
     def apply_clahe(self, **kwargs):
