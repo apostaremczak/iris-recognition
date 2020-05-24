@@ -62,3 +62,7 @@ def organize_files(input_dir: str = INPUT_DIR,
             for pic in pics:
                 shutil.copyfile(pic, f"{target_user_path}_{pic_count}.jpg")
                 pic_count += 1
+
+
+if __name__ == '__main__':
+    organize_files()
