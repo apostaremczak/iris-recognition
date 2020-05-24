@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from circle import Circle
-from preprocessing import find_circle_nearest_point
 from preprocessing_exceptions import *
 
 
@@ -38,6 +37,7 @@ class Image:
                 self.width = None
                 self.num_channels = None
 
+        self.shape = self.img.shape
         self.pupil: Circle = None
         self.iris: Circle = None
 
@@ -95,6 +95,29 @@ class Image:
     def apply_clahe(self, **kwargs):
         return Image(cv2.createCLAHE(**kwargs).apply(self.img))
 
+    @staticmethod
+    def _find_circle_nearest_point(binarized_image,
+                                   point: np.ndarray,
+                                   **kwargs) -> Circle:
+        """
+        Use Hough Transform to find circles in the image and return the one
+        with a center closest to a given point.
+
+        :param binarized_image: Binary BW image
+        :param point:           Point of interest
+        :param kwargs:          Arguments to be passed to cv2.HoughCircles
+        """
+        circles = cv2.HoughCircles(binarized_image.img,
+                                   method=cv2.HOUGH_GRADIENT, **kwargs)
+
+        if circles is None:
+            raise CirclesNotFoundException("No circles found")
+
+        dist_from_centre = np.linalg.norm(circles[0, :, :2] - point, axis=1)
+        circle_params = circles[0, np.argmin(dist_from_centre)]
+
+        return Circle(*circle_params)
+
     def find_iris_and_pupil(self):
         """
         Localize iris and pupil on the image. Updates self.iris and self.pupil
@@ -113,8 +136,8 @@ class Image:
         # Find eye_image - its center should be close to the center
         # of the image
         image_center = np.array([eye_bw.width // 2, eye_bw.height // 2])
-        iris = find_circle_nearest_point(iris_only, image_center,
-                                         **Image.IRIS_HOUGH_PARAMS)
+        iris = self._find_circle_nearest_point(iris_only, image_center,
+                                               **Image.IRIS_HOUGH_PARAMS)
 
         # Use CLAHE to enhance pupil visibility in dark eyes/photos
         pupil_img = eye_bw \
@@ -123,8 +146,9 @@ class Image:
         pupil_only = pupil_img.close(np.ones((6, 6), np.uint8))
 
         # Find pupil - its center should be close to eye_image' center
-        pupil = find_circle_nearest_point(pupil_only, iris.to_numpy()[:-1],
-                                          **Image.PUPIL_HOUGH_PARAMS)
+        pupil = self._find_circle_nearest_point(pupil_only,
+                                                iris.to_numpy()[:-1],
+                                                **Image.PUPIL_HOUGH_PARAMS)
 
         # Ensure that the pupil found is within the eye_image
         if not pupil.is_within(iris):
