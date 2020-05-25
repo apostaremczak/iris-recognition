@@ -163,7 +163,7 @@ def _find_users_with_most_photos(circled_images_paths: List[str],
 
 
 def normalize_irides(circled_images_paths: List[str],
-                     number_of_users_wanted: int = 50,
+                     number_of_users_wanted: int,
                      output_width=300,
                      output_height=150):
     create_empty_dir(NORMALIZED_DATA_DIR)
@@ -195,4 +195,5 @@ if __name__ == '__main__':
     # the remaining users and normalize them
     normalize_irides(
         circled_images_paths=glob(f"{CIRCLED_DATA_DIR}/*"),
+        number_of_users_wanted=30
     )
