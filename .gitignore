@@ -132,7 +132,6 @@ dmypy.json
 .pyre/
 
 # UBIRIS Database
-UBIRIS_*/
 data/
 
 # Papers and project rules

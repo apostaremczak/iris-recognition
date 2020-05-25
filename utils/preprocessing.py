@@ -1,14 +1,15 @@
-import cv2
 import numpy as np
 import re
 from glob import glob
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 from file_organizer import create_empty_dir
 from image import Image
 from preprocessing_exceptions import ImageProcessingException
 
-DATA_DIR = "../data/"
+ORIGINAL_DATA_DIR = "../data/original_renamed"
+CIRCLED_DATA_DIR = "../data/circled"
+NORMALIZED_DATA_DIR = "../data/normalized"
 FILENAME_REGEX = r"(\d+)_(\d+)\.jpg"
 
 
@@ -141,24 +142,57 @@ def circle_available_images(image_paths: List[str], target_dir: str):
     print(f"{failed_count} failed preprocessings")
 
 
-def normalize_iride(image_paths: List[str],
-                    target_dir: str = "../normalized_data",
-                    output_width=300,
-                    output_height=150):
-    create_empty_dir(target_dir)
+def _find_users_with_most_photos(circled_images_paths: List[str],
+                                 number_wanted: int) -> Set[str]:
+    """
+    :param circled_images_paths:
+    :param number_wanted:
+    :return:
+    """
+    user_stats = {}
 
-    for image_path in image_paths:
-        eye_image = Image(image_path=image_path)
-        eye_image.find_iris_and_pupil()
-        normalized = normalize_iris(eye_image,
-                                    output_height=output_height,
-                                    output_width=output_width)
-        normalized.save(f"{target_dir}/{image_path.split('/')[-1]}")
+    for path in circled_images_paths:
+        user_id, _ = extract_user_sample_ids(path)
+        user_stats[user_id] = user_stats.get(user_id, 0) + 1
+
+    sorted_stats = sorted(user_stats.items(), key=lambda x: x[1], reverse=True)
+
+    return set(
+        user_stats[0] for user_stats in sorted_stats[:number_wanted]
+    )
+
+
+def normalize_irides(circled_images_paths: List[str],
+                     number_of_users_wanted: int = 50,
+                     output_width=300,
+                     output_height=150):
+    create_empty_dir(NORMALIZED_DATA_DIR)
+
+    top_users = _find_users_with_most_photos(circled_images_paths,
+                                             number_of_users_wanted)
+
+    for image_path in circled_images_paths:
+        user_id, _ = extract_user_sample_ids(image_path)
+
+        if user_id in top_users:
+            file_name = image_path.split("/")[-1]
+            eye_image = Image(image_path=f"{ORIGINAL_DATA_DIR}/{file_name}")
+            eye_image.find_iris_and_pupil()
+            normalized = normalize_iris(eye_image,
+                                        output_height=output_height,
+                                        output_width=output_width)
+            normalized.save(f"{NORMALIZED_DATA_DIR}/{file_name}")
 
 
 if __name__ == '__main__':
-    # circle_available_images(sorted(glob(DATA_DIR + "*")),
-    # "../circled_images")
-    normalize_iride(
-        image_paths=glob("../desired_data/*"),
+    # Circle pupil and iris on all available photos from the database
+    # circle_available_images(
+    #     image_paths=sorted(glob(ORIGINAL_DATA_DIR + "*")),
+    #     target_dir=CIRCLED_DATA_DIR
+    # )
+
+    # After removing incorrectly circled images, extract pupils for
+    # the remaining users and normalize them
+    normalize_irides(
+        circled_images_paths=glob(f"{CIRCLED_DATA_DIR}/*"),
     )

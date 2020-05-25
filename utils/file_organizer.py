@@ -1,16 +1,17 @@
 """
-Reorganizes the original UBIRIS v1 dataset structure for easier model training.
+Reorganizes the original UBIRIS v1 dataset structure for easier image
+processing.
 """
 import os
 import shutil
 from glob import glob
 from typing import List, Set
 
-INPUT_DIR = "../UBIRIS_800_600_COLOR"
-TARGET_DIR = "../data"
+INPUT_DIR = "../data/UBIRIS_800_600_COLOR"
+TARGET_DIR = "../data/original_renamed"
 
 
-def extract_user_ids(input_dir: str) -> Set[int]:
+def _extract_user_ids(input_dir: str) -> Set[int]:
     """
     :param input_dir: Path of the original UBIRIS dataset
     :return: Set of user IDs found in the dataset
@@ -43,8 +44,8 @@ def organize_files(input_dir: str = INPUT_DIR,
     the data will be deleted before copying the new dataset.
     """
     if user_ids is None:
-        first_session_ids = extract_user_ids(f"{input_dir}/Sessao_1/*/")
-        second_session_ids = extract_user_ids(f"{input_dir}/Sessao_2/*/")
+        first_session_ids = _extract_user_ids(f"{input_dir}/Sessao_1/*/")
+        second_session_ids = _extract_user_ids(f"{input_dir}/Sessao_2/*/")
         user_ids = list(first_session_ids.intersection(second_session_ids))
 
     # Create an empty target directory or remove data already present

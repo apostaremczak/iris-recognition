@@ -7,6 +7,11 @@ from preprocessing_exceptions import *
 
 
 class Image:
+    """
+    Class representing an image of an iris, with most common functionalities
+    needed for data processing.
+    """
+
     PUPIL_HOUGH_PARAMS = {
         "dp": 1.0,
         "minDist": 200,
