@@ -136,3 +136,6 @@ data/
 
 # Papers and project rules
 *.pdf
+
+# Trained mode
+model/*.pt
