@@ -111,5 +111,6 @@ def run():
         "model_state_dict": trained_model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "train_accuracies": accuracies["train"],
-        "validation_accuracies": accuracies["val"]
+        "validation_accuracies": accuracies["val"],
+        "classes": train_config.class_names
     }, CHECKPOINT_FILE_NAME)
