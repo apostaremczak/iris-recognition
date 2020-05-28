@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-from circle import Circle
-from preprocessing_exceptions import *
+from utils.circle import Circle
+from utils.preprocessing_exceptions import *
 
 
 class Image:

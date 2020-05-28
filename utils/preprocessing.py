@@ -3,9 +3,9 @@ import re
 from glob import glob
 from typing import List, Tuple, Set
 
-from file_organizer import create_empty_dir
-from image import Image
-from preprocessing_exceptions import ImageProcessingException
+from utils.file_organizer import create_empty_dir
+from utils.image import Image
+from utils.preprocessing_exceptions import ImageProcessingException
 
 ORIGINAL_DATA_DIR = "../data/original_renamed"
 CIRCLED_DATA_DIR = "../data/circled"
@@ -13,8 +13,9 @@ NORMALIZED_DATA_DIR = "../data/normalized"
 FILENAME_REGEX = r"(\d+)_(\d+)\.jpg"
 
 
-def normalize_iris(image: Image, output_height: int,
-                   output_width: int) -> Image:
+def normalize_iris(image: Image,
+                   output_height: int = 150,
+                   output_width: int = 300) -> Image:
     """
     Normalize iris region by unwrapping the circular region into a rectangular
     block of constant dimensions.

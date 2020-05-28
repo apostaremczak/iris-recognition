@@ -26,28 +26,35 @@ class IrisClassifier(nn.Module):
 
     def __init__(self,
                  class_names: List[str] = None,
+                 num_classes: int = 30,
                  load_from_checkpoint: bool = False,
                  acceptance_threshold: float = 0.6,
-                 image_loader=default_loader):
+                 image_loader=default_loader,
+                 checkpoint_file: str = CHECKPOINT_FILE_NAME):
         super().__init__()
         assert class_names is not None or load_from_checkpoint, \
             "Either load a model with predefined classes from a checkpoint, " \
             "or provide them up front"
 
+        if class_names is not None:
+            assert len(class_names) == num_classes, \
+                "Number of classes must be equal to the length of class " \
+                "names provided"
+            self.class_names: List[str] = sorted(class_names)
+            self.num_classes = len(self.class_names)
+        else:
+            self.num_classes = num_classes
+
         self.device = torch.device("cuda:0" if torch.cuda.is_available()
                                    else "cpu")
-        if class_names is not None:
-            self.class_names: List[str] = sorted(class_names)
 
-        self.num_classes = len(self.class_names)
         model = models.resnet50(pretrained=True)
         num_features = model.fc.in_features
         model.fc = nn.Linear(num_features, self.num_classes)
         self.model: nn.Module = model
 
         if load_from_checkpoint:
-            checkpoint = torch.load(IrisClassifier.CHECKPOINT_FILE_NAME,
-                                    map_location=self.device)
+            checkpoint = torch.load(checkpoint_file, map_location=self.device)
             state_dict = checkpoint["model_state_dict"]
             self.model.load_state_dict(state_dict)
             self.class_names = checkpoint["classes"]
@@ -78,6 +85,6 @@ class IrisClassifier(nn.Module):
             if predicted_class_probability >= self.acceptance_threshold:
                 predicted_class = self.class_names[index]
             else:
-                predicted_class = "UNKNOWN"
+                predicted_class = "unknown"
 
         return predicted_class, predicted_class_probability
