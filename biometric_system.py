@@ -28,21 +28,18 @@ class ProgramResult:
 class RunResults(Enum):
     PROCESSING_FAILURE = ProgramResult("Failed to process the image", 1)
     IDENTIFICATION_SUCCESS = ProgramResult("Successfully identified a user", 0)
-    IDENTIFICATION_FAILURE = ProgramResult("Could not identify a user", 1)
+    IDENTIFICATION_FAILURE = ProgramResult(
+        "Could not identify a user - user was not found in the database", 1)
     VERIFICATION_SUCCESS = ProgramResult("Successfully verified a user", 0)
-    VERIFICATION_FAILURE = ProgramResult("Failed to verify a user", 1)
+    VERIFICATION_FAILURE_USER_UNKNOWN = ProgramResult(
+        "Failed to verify a user - user was not found in the database", 1)
+    VERIFICATION_FAILURE_USER_MISMATCH = ProgramResult(
+        "Failed to verify a user - user ID did not match the classification", 1
+    )
 
 
 def run(image_path: str, mode: str, user_id: str,
         model_checkpoint_file_path: str):
-    """
-
-    :param image_path:
-    :param mode:
-    :param user_id:
-    :param model_checkpoint_file_path:
-    :return:
-    """
     image = Image(image_path=image_path)
 
     try:
@@ -77,14 +74,14 @@ def run(image_path: str, mode: str, user_id: str,
             return RunResults.IDENTIFICATION_SUCCESS
     else:
         if predicted_user == User.UNKNOWN:
-            return RunResults.VERIFICATION_FAILURE
+            return RunResults.VERIFICATION_FAILURE_USER_UNKNOWN
         else:
             if predicted_user == user_id:
                 print(f"Successfully verified user {user_id} "
                       f"(Prediction probability: {probability:.2%})")
                 return RunResults.VERIFICATION_SUCCESS
             else:
-                return RunResults.VERIFICATION_FAILURE
+                return RunResults.VERIFICATION_FAILURE_USER_MISMATCH
 
 
 if __name__ == '__main__':
