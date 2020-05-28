@@ -139,3 +139,6 @@ data/
 
 # Trained mode
 model/*.pt
+
+# Temporary runtime files
+tmp/
