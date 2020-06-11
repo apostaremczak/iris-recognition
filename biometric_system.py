@@ -67,21 +67,24 @@ def run(image_path: str, mode: str, user_id: str,
 
     if mode == Mode.IDENTIFY:
         if predicted_user == User.UNKNOWN:
-            return RunResults.IDENTIFICATION_FAILURE
+            run_result = RunResults.IDENTIFICATION_FAILURE
         else:
             print(f"This image portraits user {predicted_user} "
                   f"(Prediction probability: {probability:.2%})")
-            return RunResults.IDENTIFICATION_SUCCESS
+            run_result = RunResults.IDENTIFICATION_SUCCESS
     else:
         if predicted_user == User.UNKNOWN:
-            return RunResults.VERIFICATION_FAILURE_USER_UNKNOWN
+            run_result = RunResults.VERIFICATION_FAILURE_USER_UNKNOWN
         else:
             if predicted_user == user_id:
                 print(f"Successfully verified user {user_id} "
                       f"(Prediction probability: {probability:.2%})")
-                return RunResults.VERIFICATION_SUCCESS
+                run_result = RunResults.VERIFICATION_SUCCESS
             else:
-                return RunResults.VERIFICATION_FAILURE_USER_MISMATCH
+                run_result = RunResults.VERIFICATION_FAILURE_USER_MISMATCH
+
+    # TODO: Remove temporary files
+    return run_result
 
 
 if __name__ == '__main__':
