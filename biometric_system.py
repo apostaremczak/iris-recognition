@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 from dataclasses import dataclass
+from os import remove
 from enum import Enum
 
 from model.iris_classifier_model import IrisClassifier
@@ -83,7 +84,9 @@ def run(image_path: str, mode: str, user_id: str,
             else:
                 run_result = RunResults.VERIFICATION_FAILURE_USER_MISMATCH
 
-    # TODO: Remove temporary files
+    # Remove temporary files
+    remove(iris_path)
+
     return run_result
 
 
