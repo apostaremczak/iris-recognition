@@ -56,6 +56,7 @@ class Image:
 
     def read(self, input_image_path: str):
         self.img = cv2.imread(filename=input_image_path)
+        assert self.img is not None, f"Read empty image at {input_image_path}"
         self._update_shape()
 
     def save(self, output_image_path: str):
