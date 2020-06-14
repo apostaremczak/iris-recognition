@@ -165,8 +165,8 @@ def _find_users_with_most_photos(circled_images_paths: List[str],
 
 def normalize_irides(circled_images_paths: List[str],
                      number_of_users_wanted: int,
-                     output_width=300,
-                     output_height=150):
+                     output_width=448,
+                     output_height=224):
     create_empty_dir(NORMALIZED_DATA_DIR)
 
     top_users = _find_users_with_most_photos(circled_images_paths,
@@ -188,10 +188,9 @@ def normalize_irides(circled_images_paths: List[str],
 if __name__ == '__main__':
     # Circle pupil and iris on all available photos from the database
     # circle_available_images(
-    #     image_paths=sorted(glob(ORIGINAL_DATA_DIR + "*")),
+    #     image_paths=sorted(glob(ORIGINAL_DATA_DIR + "/*")),
     #     target_dir=CIRCLED_DATA_DIR
     # )
-
     # After removing incorrectly circled images, extract pupils for
     # the remaining users and normalize them
     normalize_irides(
