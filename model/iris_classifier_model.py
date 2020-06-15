@@ -31,7 +31,7 @@ class IrisClassifier(nn.Module):
                  class_names: List[str] = None,
                  num_classes: int = 50,
                  load_from_checkpoint: bool = False,
-                 acceptance_threshold: float = 0.65,
+                 acceptance_threshold: float = 0.85,
                  image_loader=default_loader,
                  checkpoint_file: str = CHECKPOINT_FILE_NAME):
         super().__init__()
