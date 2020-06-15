@@ -27,6 +27,9 @@ def train_model(train_config: TrainConfig,
     for epoch in range(num_epochs):
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
+            # Separate logs
+            print()
+
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -36,8 +39,9 @@ def train_model(train_config: TrainConfig,
             running_corrects = 0
 
             # Iterate over data.
+            bar_desc = f"EPOCH {epoch + 1}/{num_epochs}, {phase.upper()}"
             for inputs, labels in tqdm(train_config.loaders[phase],
-                                       desc=phase.upper()):
+                                       desc=bar_desc):
                 inputs = inputs.to(train_config.device)
                 labels = labels.to(train_config.device)
 
@@ -66,19 +70,17 @@ def train_model(train_config: TrainConfig,
 
             accuracies[phase].append(epoch_acc)
 
-            print(f"\nEPOCH {epoch + 1}/{num_epochs}, {phase.upper()} STATS: "
-                  f"Loss: {epoch_loss:.3}, accuracy: {epoch_acc:.2%}")
+            print(f"Loss: {epoch_loss:.3}, "
+                  f"{phase.lower()} accuracy: {epoch_acc:.2%}")
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
 
-        print()
-
     time_elapsed = time.time() - since
     print(f"Training complete in {time_elapsed // 60:}m "
-          f"{time_elapsed % 60.2}s")
+          f"{time_elapsed % 60:.2}s")
     print(f"Best validation accuracy: {best_acc:.4}")
 
     # load best model weights
