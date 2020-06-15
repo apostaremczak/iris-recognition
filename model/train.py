@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import time
 import copy
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from model.train_config import TrainConfig, create_train_config
 
@@ -13,7 +13,7 @@ def train_model(train_config: TrainConfig,
                 model: nn.Module,
                 criterion,
                 optimizer,
-                num_epochs: int = 50):
+                num_epochs):
     since = time.time()
 
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -25,9 +25,6 @@ def train_model(train_config: TrainConfig,
     }
 
     for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-        print('-' * 10)
-
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
@@ -69,8 +66,8 @@ def train_model(train_config: TrainConfig,
 
             accuracies[phase].append(epoch_acc)
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'
-                  .format(phase, epoch_loss, epoch_acc))
+            print(f"\nEPOCH {epoch + 1}/{num_epochs}, {phase.upper()} STATS: "
+                  f"Loss: {epoch_loss:.3}, accuracy: {epoch_acc:.2%}")
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
@@ -82,7 +79,7 @@ def train_model(train_config: TrainConfig,
     time_elapsed = time.time() - since
     print(f"Training complete in {time_elapsed // 60:}m "
           f"{time_elapsed % 60.2}s")
-    print(f"Best val Acc: {best_acc:.4}")
+    print(f"Best validation accuracy: {best_acc:.4}")
 
     # load best model weights
     model.load_state_dict(best_model_wts)
@@ -96,7 +93,8 @@ def run():
         train_config=train_config,
         model=train_config.model,
         optimizer=train_config.optimizer,
-        criterion=train_config.criterion
+        criterion=train_config.criterion,
+        num_epochs=train_config.num_epochs
     )
 
     checkpoint_dict = {

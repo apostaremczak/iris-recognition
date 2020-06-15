@@ -21,6 +21,7 @@ class TrainConfig:
     loaders: Dict[str, DataLoader]
     criterion: nn.Module = nn.CrossEntropyLoss()
     learning_rate: float = 0.0002
+    num_epochs: int = 100
 
     def __post_init__(self):
         self.class_names = sorted(self.data['train'].classes)
@@ -36,7 +37,8 @@ class TrainConfig:
         )
 
 
-def create_train_config(batch_size: int = 4, shuffle: bool = True,
+def create_train_config(batch_size: int = 16,
+                        shuffle: bool = True,
                         num_workers: int = 4) -> TrainConfig:
     image_datasets = {
         x: ImageFolder(os.path.join(INPUT_DATA_DIR, x), DATA_TRANSFORMS[x])
