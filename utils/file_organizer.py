@@ -7,8 +7,8 @@ import shutil
 from glob import glob
 from typing import List, Set
 
-INPUT_DIR = "../data/UBIRIS_800_600_COLOR"
-TARGET_DIR = "../data/original_renamed"
+INPUT_DIR = "../data/tmp/UBIRIS_800_600_COLOR"
+TARGET_DIR = "../data/tmp/original_renamed"
 
 
 def _extract_user_ids(input_dir: str) -> Set[int]:
@@ -17,15 +17,6 @@ def _extract_user_ids(input_dir: str) -> Set[int]:
     :return: Set of user IDs found in the dataset
     """
     return set(int(user_path.split("/")[-2]) for user_path in glob(input_dir))
-
-
-def create_empty_dir(target_dir: str):
-    if os.path.exists(target_dir):
-        files = glob(target_dir + "/*")
-        for file in files:
-            os.remove(file)
-    else:
-        os.makedirs(target_dir)
 
 
 def organize_files(input_dir: str = INPUT_DIR,
