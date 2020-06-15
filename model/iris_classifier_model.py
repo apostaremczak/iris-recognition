@@ -28,7 +28,7 @@ class IrisClassifier(nn.Module):
 
     def __init__(self,
                  class_names: List[str] = None,
-                 num_classes: int = 30,
+                 num_classes: int = 50,
                  load_from_checkpoint: bool = False,
                  acceptance_threshold: float = 0.6,
                  image_loader=default_loader,

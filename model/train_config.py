@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from model.iris_classifier_model import IrisClassifier, DATA_TRANSFORMS
 
 # Directory with normalized photos splitted into train and val subsets
-INPUT_DATA_DIR = 'data/tmp/normalized'
+INPUT_DATA_DIR = 'data/tmp/normalized_splitted'
 
 
 @dataclass
@@ -28,6 +28,7 @@ class TrainConfig:
         self.device = torch.device("cuda:0" if torch.cuda.is_available()
                                    else "cpu")
         self.model = IrisClassifier(class_names=self.class_names,
+                                    num_classes=len(self.class_names),
                                     load_from_checkpoint=False)
         self.optimizer = Adam(
             params=self.model.parameters(),

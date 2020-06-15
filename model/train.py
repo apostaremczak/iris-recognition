@@ -2,8 +2,9 @@ import torch
 import torch.nn as nn
 import time
 import copy
+from tqdm.notebook import tqdm
 
-from train_config import TrainConfig, create_train_config
+from model.train_config import TrainConfig, create_train_config
 
 CHECKPOINT_FILE_NAME = "iris_recognition_trained_model.pt"
 
@@ -23,9 +24,7 @@ def train_model(train_config: TrainConfig,
         "val": []
     }
 
-    for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-        print('-' * 10)
+    for _ in tqdm(range(num_epochs), desc="Training epoch"):
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
