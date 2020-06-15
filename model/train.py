@@ -12,7 +12,6 @@ def train_model(train_config: TrainConfig,
                 model: nn.Module,
                 criterion,
                 optimizer,
-                scheduler,
                 num_epochs: int = 50):
     since = time.time()
 
@@ -61,8 +60,6 @@ def train_model(train_config: TrainConfig,
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
-            if phase == 'train':
-                scheduler.step()
 
             epoch_loss = running_loss / train_config.data_sizes[phase]
             epoch_acc = running_corrects.double() / train_config.data_sizes[
@@ -93,24 +90,19 @@ def train_model(train_config: TrainConfig,
 
 def run():
     train_config = create_train_config()
-    model = train_config.get_model()
-    optimizer = train_config.optimizer(model.parameters(),
-                                       lr=0.001,
-                                       momentum=0.9)
-    scheduler = train_config.lr_scheduler(optimizer, step_size=7, gamma=0.1)
-
     trained_model, accuracies = train_model(
         train_config=train_config,
-        model=model,
-        optimizer=optimizer,
-        criterion=train_config.criterion,
-        scheduler=scheduler
+        model=train_config.model,
+        optimizer=train_config.optimizer,
+        criterion=train_config.criterion
     )
 
-    torch.save({
+    checkpoint_dict = {
         "model_state_dict": trained_model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
+        "optimizer_state_dict": train_config.optimizer.state_dict(),
         "train_accuracies": accuracies["train"],
         "validation_accuracies": accuracies["val"],
         "classes": train_config.class_names
-    }, CHECKPOINT_FILE_NAME)
+    }
+
+    torch.save(checkpoint_dict, CHECKPOINT_FILE_NAME)

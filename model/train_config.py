@@ -4,36 +4,35 @@ from typing import Dict
 import os
 import torch
 import torch.nn as nn
-import torch.optim as optim
 
-from torch.optim import lr_scheduler
+from torch.optim import Adam
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
-from iris_classifier_model import IrisClassifier, DATA_TRANSFORMS
+from model.iris_classifier_model import IrisClassifier, DATA_TRANSFORMS
 
-# Directory with normalized photos
-INPUT_DATA_DIR = '../data/normalized_splitted'
+# Directory with normalized photos splitted into train and val subsets
+INPUT_DATA_DIR = '../data/tmp/normalized'
 
 
 @dataclass
 class TrainConfig:
     data: Dict[str, ImageFolder]
     loaders: Dict[str, DataLoader]
+    criterion: nn.Module = nn.CrossEntropyLoss()
+    learning_rate: float = 0.0002
 
     def __post_init__(self):
         self.class_names = sorted(self.data['train'].classes)
         self.data_sizes = {x: len(self.data[x]) for x in ['train', 'val']}
         self.device = torch.device("cuda:0" if torch.cuda.is_available()
                                    else "cpu")
-
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD
-        self.lr_scheduler = lr_scheduler.StepLR
-
-    def get_model(self) -> nn.Module:
-        return IrisClassifier(class_names=self.class_names,
-                              load_from_checkpoint=False).model
+        self.model = IrisClassifier(class_names=self.class_names,
+                                    load_from_checkpoint=False)
+        self.optimizer = Adam(
+            params=self.model.parameters(),
+            lr=self.learning_rate
+        )
 
 
 def create_train_config(batch_size: int = 4, shuffle: bool = True,
