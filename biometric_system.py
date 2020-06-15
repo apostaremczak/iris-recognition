@@ -5,6 +5,7 @@ from os import remove
 from enum import Enum
 
 from model.iris_classifier_model import IrisClassifier
+from model.user import User
 from utils.file_organizer import create_empty_dir
 from utils.image import Image
 from utils.preprocessing_exceptions import ImageProcessingException
@@ -14,10 +15,6 @@ from utils.preprocessing import normalize_iris
 class Mode:
     IDENTIFY: str = "identify"
     VERIFY: str = "verify"
-
-
-class User:
-    UNKNOWN = "unknown"
 
 
 @dataclass
@@ -64,7 +61,7 @@ def run(image_path: str, mode: str, user_id: str,
                                 checkpoint_file=model_checkpoint_file_path)
 
     # Get the classifier's prediction
-    predicted_user, probability = classifier.evaluate(iris_path)
+    predicted_user, probability = classifier.classify_single_image(iris_path)
 
     if mode == Mode.IDENTIFY:
         if predicted_user == User.UNKNOWN:

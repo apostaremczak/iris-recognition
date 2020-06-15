@@ -4,6 +4,8 @@ from torchvision import models, transforms
 from torchvision.datasets.folder import default_loader
 from typing import List, Tuple
 
+from model.user import User
+
 # Data augmentation for training and validation
 DATA_TRANSFORMS = {
     'train': transforms.Compose([
@@ -49,8 +51,12 @@ class IrisClassifier(nn.Module):
                                    else "cpu")
 
         model = models.resnet50(pretrained=True)
+
+        # Replace the last ResNet layer to match the desired number of classes
         num_features = model.fc.in_features
         model.fc = nn.Linear(num_features, self.num_classes)
+
+        model = model.to(self.device)
         self.model: nn.Module = model
 
         if load_from_checkpoint:
@@ -63,11 +69,13 @@ class IrisClassifier(nn.Module):
         self.image_loader = image_loader
         self.transform = DATA_TRANSFORMS["val"]
 
-    def evaluate(self, normalized_image_path: str) -> Tuple[str, float]:
-        """
+    def forward(self, x):
+        return self.model(x)
 
-        :param normalized_image_path:
-        :return: Predicted class and its probability
+    def classify_single_image(self,
+                              normalized_image_path: str) -> Tuple[str, float]:
+        """
+        Predict a class and determine its probability
         """
         self.model.eval()
         image = self.image_loader(normalized_image_path)
@@ -85,6 +93,6 @@ class IrisClassifier(nn.Module):
             if predicted_class_probability >= self.acceptance_threshold:
                 predicted_class = self.class_names[index]
             else:
-                predicted_class = "unknown"
+                predicted_class = User.UNKNOWN
 
         return predicted_class, predicted_class_probability
