@@ -78,9 +78,9 @@ def train_model(train_config: TrainConfig,
         print()
 
     time_elapsed = time.time() - since
-    print('Training complete in {:.0f}m {:.0f}s'
-          .format(time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
+    print(f"Training complete in {time_elapsed // 60:}m "
+          f"{time_elapsed % 60.2}s")
+    print(f"Best val Acc: {best_acc:.4}")
 
     # load best model weights
     model.load_state_dict(best_model_wts)
