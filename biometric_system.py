@@ -36,8 +36,8 @@ class RunResults(Enum):
     )
 
 
-def run(image_path: str, mode: str, user_id: str,
-        model_checkpoint_file_path: str):
+def run_classification(image_path: str, mode: str, user_id: str,
+                       model_checkpoint_file_path: str):
     image = Image(image_path=image_path)
 
     try:
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     if args.mode == Mode.VERIFY:
         assert args.user is not None, "User ID required for mode 'verify'"
 
-    result = run(
+    result = run_classification(
         image_path=args.image,
         mode=args.mode,
         user_id=args.user,
