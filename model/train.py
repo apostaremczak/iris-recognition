@@ -24,7 +24,9 @@ def train_model(train_config: TrainConfig,
         "val": []
     }
 
-    for _ in tqdm(range(num_epochs), desc="Training epoch"):
+    for epoch in range(num_epochs):
+        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print('-' * 10)
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -37,7 +39,8 @@ def train_model(train_config: TrainConfig,
             running_corrects = 0
 
             # Iterate over data.
-            for inputs, labels in train_config.loaders[phase]:
+            for inputs, labels in tqdm(train_config.loaders[phase],
+                                       desc=phase.upper()):
                 inputs = inputs.to(train_config.device)
                 labels = labels.to(train_config.device)
 
