@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument("mode",
                         type=str,
                         choices=[Mode.IDENTIFY, Mode.VERIFY],
-                        help="Program mode."
+                        help="Program mode. "
                              "If you want to identify a user based on an "
                              "image, choose 'identify'; "
                              "If you want to verify whether an image "
