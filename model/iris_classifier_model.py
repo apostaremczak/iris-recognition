@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from collections import OrderedDict
 from torchvision import models, transforms
 from torchvision.datasets.folder import default_loader
 from typing import List, Tuple
@@ -30,7 +31,7 @@ class IrisClassifier(nn.Module):
                  class_names: List[str] = None,
                  num_classes: int = 50,
                  load_from_checkpoint: bool = False,
-                 acceptance_threshold: float = 0.6,
+                 acceptance_threshold: float = 0.65,
                  image_loader=default_loader,
                  checkpoint_file: str = CHECKPOINT_FILE_NAME):
         super().__init__()
@@ -62,7 +63,17 @@ class IrisClassifier(nn.Module):
         if load_from_checkpoint:
             checkpoint = torch.load(checkpoint_file, map_location=self.device)
             state_dict = checkpoint["model_state_dict"]
-            self.model.load_state_dict(state_dict)
+
+            try:
+                self.model.load_state_dict(state_dict)
+            except RuntimeError:
+                # Local fix when loading model that was saved with DataParallel
+                new_state_dict = OrderedDict()
+                for k, v in state_dict.items():
+                    name = k.replace("model.", "")
+                    new_state_dict[name] = v
+                self.model.load_state_dict(new_state_dict)
+
             self.class_names = checkpoint["classes"]
 
         self.acceptance_threshold = acceptance_threshold
