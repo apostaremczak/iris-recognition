@@ -1,21 +1,20 @@
 import numpy as np
-import re
-from glob import glob
-from typing import List, Tuple, Set
+import random
+from tqdm import tqdm
 
-from utils.file_organizer import create_empty_dir
+from utils.file_utils import *
 from utils.image import Image
 from utils.preprocessing_exceptions import ImageProcessingException
 
-ORIGINAL_DATA_DIR = "../data/original_renamed"
-CIRCLED_DATA_DIR = "../data/circled"
-NORMALIZED_DATA_DIR = "../data/normalized"
-FILENAME_REGEX = r"(\d+)_(\d+)\.jpg"
+ORIGINAL_DATA_DIR = "../data/tmp/original_renamed"
+CIRCLED_DATA_DIR = "../data/tmp/circled"
+NORMALIZED_DATA_DIR = "../data/tmp/normalized_all"
+SYSTEM_DATABASE_DIR = "../data/system_database"
 
 
 def normalize_iris(image: Image,
-                   output_height: int = 150,
-                   output_width: int = 300) -> Image:
+                   output_height: int,
+                   output_width: int) -> Image:
     """
     Normalize iris region by unwrapping the circular region into a rectangular
     block of constant dimensions.
@@ -96,7 +95,7 @@ def normalize_iris(image: Image,
     polar_array = image.img[yo, xo]
     polar_array = polar_array / 255
 
-    # Get rid of outling points in order to write out the circular pattern
+    # Get rid of outlying points in order to write out the circular pattern
     image.img[yo, xo] = 255
 
     # Get pixel coords for circle around iris
@@ -117,15 +116,6 @@ def normalize_iris(image: Image,
     return Image((polar_array * 255).astype(np.uint8))
 
 
-def extract_user_sample_ids(image_path: str) -> Tuple[str, str]:
-    """
-    Extract user ID and sample number from filename
-    """
-    image_filename = image_path.split("/")[-1]
-    user_id, sample_id = re.match(FILENAME_REGEX, image_filename).groups()
-    return user_id, sample_id
-
-
 def circle_available_images(image_paths: List[str], target_dir: str):
     create_empty_dir(target_dir)
     failed_count = 0
@@ -144,11 +134,9 @@ def circle_available_images(image_paths: List[str], target_dir: str):
 
 
 def _find_users_with_most_photos(circled_images_paths: List[str],
-                                 number_wanted: int) -> Set[str]:
+                                 num_users_wanted: int = 100) -> List[str]:
     """
-    :param circled_images_paths:
-    :param number_wanted:
-    :return:
+    :return: List of sorted user IDs
     """
     user_stats = {}
 
@@ -158,31 +146,78 @@ def _find_users_with_most_photos(circled_images_paths: List[str],
 
     sorted_stats = sorted(user_stats.items(), key=lambda x: x[1], reverse=True)
 
-    return set(
-        user_stats[0] for user_stats in sorted_stats[:number_wanted]
-    )
+    assert len(sorted_stats) >= num_users_wanted, \
+        "Could not find a sufficient number of users"
+
+    user_ids = set(stats[0] for stats in sorted_stats[:num_users_wanted])
+
+    return sorted(list(user_ids))
 
 
-def normalize_irides(circled_images_paths: List[str],
-                     number_of_users_wanted: int,
-                     output_width=448,
-                     output_height=224):
-    create_empty_dir(NORMALIZED_DATA_DIR)
+def split_system_users(circled_images_dir: str = CIRCLED_DATA_DIR,
+                       original_images_dir: str = ORIGINAL_DATA_DIR,
+                       system_database_dir: str = SYSTEM_DATABASE_DIR,
+                       normalized_images_dir: str = NORMALIZED_DATA_DIR,
+                       number_of_users_wanted: int = 100,
+                       normalized_image_width: int = 400,
+                       normalized_image_height: int = 224,
+                       random_state: int = 1):
+    """
+    Divide selected users into "registered", which will be known to the system,
 
-    top_users = _find_users_with_most_photos(circled_images_paths,
-                                             number_of_users_wanted)
+    and "unknown", which should be rejected upon identification.
+    Move their input images into their respective data/system_database folders.
 
-    for image_path in circled_images_paths:
+    Additionally, split "registered" user photos into train and val subsets
+    and save them into data/tmp/normalized.
+    """
+    circled_images_paths = sorted(glob(f"{circled_images_dir}/*"))
+    top_users_ids = _find_users_with_most_photos(circled_images_paths,
+                                                 number_of_users_wanted)
+    # Filter out unnecessary images
+    top_users_image_paths = [
+        path for path in circled_images_paths
+        if extract_user_sample_ids(path)[0] in top_users_ids
+    ]
+
+    # Shuffle IDs
+    random.seed(random_state)
+    random.shuffle(top_users_ids)
+
+    # Split users into "registered" and "unknown"
+    split_idx = number_of_users_wanted // 2
+    registered_ids = top_users_ids[:split_idx]
+
+    registered_dir = f"{system_database_dir}/registered_users"
+    unknown_dir = f"{system_database_dir}/unknown_users"
+
+    create_empty_dir(normalized_images_dir)
+    create_empty_dir(registered_dir)
+    create_empty_dir(unknown_dir)
+
+    for image_path in tqdm(top_users_image_paths,
+                           desc="Copying irides images"):
         user_id, _ = extract_user_sample_ids(image_path)
 
-        if user_id in top_users:
-            file_name = image_path.split("/")[-1]
-            eye_image = Image(image_path=f"{ORIGINAL_DATA_DIR}/{file_name}")
+        is_registered = user_id in registered_ids
+        target_dir = registered_dir if is_registered else unknown_dir
+
+        file_name = get_file_name(image_path)
+        original_image_path = f"{original_images_dir}/{file_name}"
+
+        # Save original image to data/system_database
+        copyfile(original_image_path, f"{target_dir}/{file_name}")
+
+        if is_registered:
+            eye_image = Image(image_path=original_image_path)
             eye_image.find_iris_and_pupil()
-            normalized = normalize_iris(eye_image,
-                                        output_height=output_height,
-                                        output_width=output_width)
-            normalized.save(f"{NORMALIZED_DATA_DIR}/{file_name}")
+            normalized = normalize_iris(
+                eye_image,
+                output_height=normalized_image_height,
+                output_width=normalized_image_width
+            )
+
+            normalized.save(f"{normalized_images_dir}/{file_name}")
 
 
 if __name__ == '__main__':
@@ -191,9 +226,7 @@ if __name__ == '__main__':
     #     image_paths=sorted(glob(ORIGINAL_DATA_DIR + "/*")),
     #     target_dir=CIRCLED_DATA_DIR
     # )
+
     # After removing incorrectly circled images, extract pupils for
     # the remaining users and normalize them
-    normalize_irides(
-        circled_images_paths=glob(f"{CIRCLED_DATA_DIR}/*"),
-        number_of_users_wanted=30
-    )
+    split_system_users()
