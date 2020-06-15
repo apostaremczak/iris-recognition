@@ -10,9 +10,9 @@ dependencies:
   - backcall=0.1.0=py_0
   - bleach=3.1.5=pyh9f0ad1d_0
   - bzip2=1.0.8=h516909a_2
-  - ca-certificates=2020.4.5.1=hecc5488_0
+  - ca-certificates=2020.4.5.2=hecda079_0
   - cairo=1.16.0=hcf35c78_1003
-  - certifi=2020.4.5.1=py38h32f6830_0
+  - certifi=2020.4.5.2=py38h32f6830_0
   - cloudpickle=1.4.1=py_0
   - cudatoolkit=10.1.243=h6bb024c_0
   - cycler=0.10.0=py_2
@@ -145,6 +145,7 @@ dependencies:
   - toolz=0.10.0=py_0
   - torchvision=0.5.0=py38_cu101
   - tornado=6.0.4=py38h1e0a361_1
+  - tqdm=4.46.1=pyh9f0ad1d_0
   - traitlets=4.3.3=py38h32f6830_1
   - wcwidth=0.1.9=pyh9f0ad1d_0
   - webencodings=0.5.1=py_1
