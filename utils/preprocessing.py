@@ -11,10 +11,13 @@ CIRCLED_DATA_DIR = "../data/tmp/circled"
 NORMALIZED_DATA_DIR = "../data/tmp/normalized_all"
 SYSTEM_DATABASE_DIR = "../data/system_database"
 
+NORMALIZED_IMAGE_WIDTH = 400
+NORMALIZED_IMAGE_HEIGHT = 224
+
 
 def normalize_iris(image: Image,
-                   output_height: int,
-                   output_width: int) -> Image:
+                   output_height: int = NORMALIZED_IMAGE_HEIGHT,
+                   output_width: int = NORMALIZED_IMAGE_WIDTH) -> Image:
     """
     Normalize iris region by unwrapping the circular region into a rectangular
     block of constant dimensions.
@@ -159,8 +162,8 @@ def split_system_users(circled_images_dir: str = CIRCLED_DATA_DIR,
                        system_database_dir: str = SYSTEM_DATABASE_DIR,
                        normalized_images_dir: str = NORMALIZED_DATA_DIR,
                        number_of_users_wanted: int = 100,
-                       normalized_image_width: int = 400,
-                       normalized_image_height: int = 224,
+                       normalized_image_width: int = NORMALIZED_IMAGE_WIDTH,
+                       normalized_image_height: int = NORMALIZED_IMAGE_HEIGHT,
                        random_state: int = 1):
     """
     Divide selected users into "registered", which will be known to the system,
