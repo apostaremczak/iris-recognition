@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from model.iris_classifier_model import IrisClassifier, DATA_TRANSFORMS
 
 # Directory with normalized photos splitted into train and val subsets
-INPUT_DATA_DIR = '../data/tmp/normalized'
+INPUT_DATA_DIR = 'data/tmp/normalized'
 
 
 @dataclass
