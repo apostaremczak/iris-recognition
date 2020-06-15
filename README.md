@@ -35,6 +35,17 @@ The training was done in a Google Colaboratory notebook with GPU support.
 
 ![Model accuracy](stats/model_accuracies.png)
 
+### System accuracy
+
+The system recognizes a user if the neural network underneath classifies an image with at least 98% confidence.
+
+|                  | Successful identification       | Successful verification         |
+|------------------|---------------------------------|---------------------------------|
+| **Registered users** | 50 users (85.35% of all images) | 50 users (85.35% of all images) |
+| **Unknown users**    | 9 users (3.46% of all images)   | *NA*                              |
+|                  |                                 |                                 |
+
+
 ## System requirements
 
 This project was written in Python 3.8. To create Conda environment with all 
@@ -73,7 +84,7 @@ Biometric system.
 
 positional arguments:
   image                 Path to the image.
-  {identify,verify}     Program mode.If you want to identify a user based on an image, choose 'identify'; If you want to verify whether an image portraits a particular user,
+  {identify,verify}     Program mode. If you want to identify a user based on an image, choose 'identify'; If you want to verify whether an image portraits a particular user,
                         choose 'verify' and provide the user's ID in the next argument.
 
 optional arguments:
@@ -89,16 +100,16 @@ optional arguments:
 
 The system correctly identified a user:
 ```
-python3 biometric_system.py data/original/27_5.jpg identify
+python3 biometric_system.py data/system_database/registered_users/7_0.jpg identify
 
-This image portraits user 27 (Prediction probability: 86.81%)
+This image portraits user 7 (Prediction probability: 99.87%)
 Program exited with code: 0 - Successfully identified a user
 ```
 
 The system was not able to recognize a user from their image because of low 
-prediction probability:
+prediction probability (the eye was closed on the picture):
 ```
-python3 biometric_system.py data/original/46_2.jpg identify
+python3 biometric_system.py data/system_database/registered_users/45_8.jpg identify
 
 Program exited with code: 1 - Could not identify a user - user was not found in the database
 ```
@@ -110,7 +121,7 @@ Successful verification:
 ```
 python3 biometric_system.py data/system_database/registered_users/61_8.jpg verify --user 61
 
-Successfully verified user 61 (Prediction probability: 92.88%)
+Successfully verified user 61 (Prediction probability: 99.94%)
 Program exited with code: 0 - Successfully verified a user
 ```
 
@@ -126,6 +137,15 @@ The system was not able to recognize a user from their image because of low
 prediction probability:
 ```
 python3 biometric_system.py data/system_database/registered_users/46_2.jpg verify --user 46
+
+Program exited with code: 1 - Failed to verify a user - user was not found in the database
+```
+
+### Unregistered users
+
+Submitting an image of a user that is not registered in the system:
+```
+python3 biometric_system.py data/system_database/unknown_users/1_0.jpg identify
 
 Program exited with code: 1 - Failed to verify a user - user was not found in the database
 ```
