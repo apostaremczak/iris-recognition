@@ -6,7 +6,7 @@ from enum import Enum
 
 from model.iris_classifier_model import IrisClassifier
 from model.user import User
-from utils.file_organizer import create_empty_dir
+from utils.file_utils import create_empty_dir
 from utils.image import Image
 from utils.preprocessing_exceptions import ImageProcessingException
 from utils.preprocessing import normalize_iris
