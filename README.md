@@ -10,7 +10,7 @@ The system was build on a deep neural network using transfer learning.
 Given a normalized picture of an iris, the model classifies it to one of the
 system's users, and gives a probability of the prediction.
 In order to reject uncertain classifications, only results with probability
-greater than 60% are considered to be successful.
+greater than 98% are considered to be successful.
 
 ## Model training details
 
